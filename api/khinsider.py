@@ -4,34 +4,39 @@ from flask import Blueprint
 from flask_restful import Api, Resource
 from datetime import datetime
 def scrape_khinsider_home():
-    url = "https://downloads.khinsider.com/game-soundtracks"
-    response = requests.get(url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
+    try:
+        url = "https://downloads.khinsider.com/game-soundtracks"
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
 
-        table = soup.find('table', class_='albumList')
-        albums = []
+            table = soup.find('table', class_='albumList')
+            albums = []
 
-        for row in table.find_all('tr')[1:]:  # Skip the header row
-            columns = row.find_all('td')
-            if len(columns) == 5:
-                img_tag = columns[0].find('img')
-                album_url = 'https://downloads.khinsider.com' + columns[1].find('a')['href']
-                album_id = album_url.split('/album/', 1)[-1] if '/album/' in album_url else None
-                album = {
-                    'id': album_id,
-                    'image_url': img_tag['src'] if img_tag else None,
-                    'album_url': album_url,
-                    'album_name': columns[1].text.strip(),
-                    'platform': columns[2].text.strip() if columns[2] else None,
-                    'type': columns[3].text.strip() if columns[3] else None,
-                    'year': columns[4].text.strip() if columns[4] else None
-                }
-                albums.append(album)
+            for row in table.find_all('tr')[1:]:  # Skip the header row
+                columns = row.find_all('td')
+                if len(columns) == 5:
+                    img_tag = columns[0].find('img')
+                    album_url = 'https://downloads.khinsider.com' + columns[1].find('a')['href']
+                    album_id = album_url.split('/album/', 1)[-1] if '/album/' in album_url else None
+                    album = {
+                        'id': album_id,
+                        'image_url': img_tag['src'] if img_tag else None,
+                        'album_url': album_url,
+                        'album_name': columns[1].text.strip(),
+                        'platform': columns[2].text.strip() if columns[2] else None,
+                        'type': columns[3].text.strip() if columns[3] else None,
+                        'year': columns[4].text.strip() if columns[4] else None
+                    }
+                    albums.append(album)
 
-        return {"status": "200", "message": "Received khinsider home", "data": {"albums": albums}}, 200
-    else:
-        return {"status": "400", "message": "Failed to receive khinsider home"}, 400
+            return {"status": "200", "message": "Received khinsider home", "data": {"albums": albums}}, 200
+        else:
+            return {"status": "400", "message": "Failed to receive khinsider home"}, 400
+    except Exception as e:
+        with open('error.log', 'a') as error_file:
+            error_file.write(f"{datetime.now()}:\n Error in scrape_khinsider_home\n Error message: {str(e)}\n\n")
+        return {"status": "500", "message": "There's an error, the error has been reported to the developers (If you run it locally, you can check error.log for more details)"}, 500
     
 def scrape_khinsider_album(album_id):
     try:
@@ -142,7 +147,7 @@ def scrape_khinsider_album(album_id):
     except Exception as e:
         with open('error.log', 'a') as error_file:
             error_file.write(f"{datetime.now()}:\n Error in scrape_khinsider_album with album_id: {album_id}\n Error message: {str(e)}\n\n")
-        return {"status": "500", "message": "There's an error, the error has been reported to the developers"}, 500
+        return {"status": "500", "message": "There's an error, the error has been reported to the developers (If you run it locally, you can check error.log for more details)"}, 500
 
 def scrape_khinsider_get_song(album_id, song_id):
     try:
@@ -162,7 +167,7 @@ def scrape_khinsider_get_song(album_id, song_id):
     except Exception as e:
         with open('error.log', 'a') as error_file:
             error_file.write(f"{datetime.now()}:\n Error in scrape_khinsider_get_song in album_id: {album_id} with song_id: {song_id}\n Error message: {str(e)}\n\n")
-        return {"status": "500", "message": "There's an error, the error has been reported to the developers"}, 500
+        return {"status": "500", "message": "There's an error, the error has been reported to the developers (If you run it locally, you can check error.log for more details)"}, 500
 
 class get_khinsider_home(Resource):
     def get(self):
