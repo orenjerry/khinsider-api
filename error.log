@@ -1,0 +1,19 @@
+2024-10-22 13:51:38.536294: super-sentai-ost cannot access local variable 'song' where it is not associated with a value
+2024-10-22 13:52:23.177822:
+ Error in scrape_khinsider_album with album_id: super-sentai-ost
+ cannot access local variable 'song' where it is not associated with a value
+2024-10-22 13:53:16.876248:
+ Error in *scrape_khinsider_album* with album_id: super-sentai-ost
+ cannot access local variable 'song' where it is not associated with a value
+2024-10-22 13:54:37.674441:
+ Error in scrape_khinsider_album with album_id: super-sentai-ost
+ Error message: cannot access local variable 'song' where it is not associated with a value
+
+2024-10-22 13:54:42.494274:
+ Error in scrape_khinsider_album with album_id: super-sentai-ost
+ Error message: cannot access local variable 'song' where it is not associated with a value
+
+2024-10-22 14:07:59.321519:
+ Error in scrape_khinsider_album with album_id: super-sentai-ost
+ Error message: name 'publisher' is not defined
+
