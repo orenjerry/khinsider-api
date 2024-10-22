@@ -84,26 +84,36 @@ def scrape_khinsider_album(album_id):
                 for row in table.find_all('tr')[1:-1]:  # Skip the header row and footer row
                     columns = row.find_all('td')
                     if len(columns) == 9:
+                        track = columns[2].text.strip().replace('.', '')
+                        track = track.zfill(2) + '.'
                         song = {
+                            'song_id': (columns[1].text.strip() + '_' + track + '_' + columns[3].text.strip().replace(' ', '_')).lower(),
                             'cd': columns[1].text.strip(),
                             'track': columns[2].text.strip(),
                             'song_name': columns[3].text.strip(),
                             'length': columns[4].text.strip(),
                         }
                     elif len(columns) == 8:
+                        track = columns[1].text.strip().replace('.', '')
+                        track = track.zfill(2) + '.'
                         song = {
+                            'song_id': (track + '_' + columns[2].text.strip().replace(' ', '_')).lower(),
                             'track': columns[1].text.strip(),
                             'song_name': columns[2].text.strip(),
                             'length': columns[3].text.strip(),
                         }
                     elif len(columns) == 7:
+                        track = columns[1].text.strip().replace('.', '')
+                        track = track.zfill(2) + '.'
                         song = {
+                            'song_id': (track + '_' + columns[2].text.strip().replace(' ', '_')).lower(),
                             'track': columns[1].text.strip(),
                             'song_name': columns[2].text.strip(),
                             'length': columns[3].text.strip(),
                         }
                     elif len(columns) == 6:
                         song = {
+                            'song_id': columns[1].text.strip().replace(' ', '_').lower(),
                             'song_name': columns[1].text.strip(),
                             'length': columns[2].text.strip(),
                         }
@@ -112,6 +122,7 @@ def scrape_khinsider_album(album_id):
                     "status": "200", 
                     "message": "Received khinsider album", 
                     "data": {
+                        "album_id": album_id,
                         "title": title,
                         "alternative_title": title_alt,
                         "album_images": album_images,
@@ -133,6 +144,26 @@ def scrape_khinsider_album(album_id):
             error_file.write(f"{datetime.now()}:\n Error in scrape_khinsider_album with album_id: {album_id}\n Error message: {str(e)}\n\n")
         return {"status": "500", "message": "There's an error, the error has been reported to the developers"}, 500
 
+def scrape_khinsider_get_song(album_id, song_id):
+    try:
+        url = f"https://downloads.khinsider.com/game-soundtracks/album/{album_id}/{song_id}.mp3"
+        response = requests.get(url)
+        if response.status_code == 200:
+            mp3_soup = BeautifulSoup(response.content, 'html.parser')
+            audio = mp3_soup.find("audio")
+            if audio:
+                mp3_url = audio.get("src")
+                if mp3_url:
+                    mp3_response = requests.get(mp3_url)
+                    if mp3_response.status_code == 200:
+                        return {"status": "200", "message": "Received khinsider song download url", "data": {"song_id": song_id, "url": mp3_url}}, 200
+        
+        return {"status": "404", "message": "Song not found"}, 404
+    except Exception as e:
+        with open('error.log', 'a') as error_file:
+            error_file.write(f"{datetime.now()}:\n Error in scrape_khinsider_get_song in album_id: {album_id} with song_id: {song_id}\n Error message: {str(e)}\n\n")
+        return {"status": "500", "message": "There's an error, the error has been reported to the developers"}, 500
+
 class get_khinsider_home(Resource):
     def get(self):
         albums, status_code = scrape_khinsider_home()
@@ -142,8 +173,18 @@ class get_khinsider_album(Resource):
     def get(self, album_id):
         album, status_code = scrape_khinsider_album(album_id)
         return album, status_code
+    
+class get_khinsider_song(Resource):
+    def get(self, album_id, song_id):
+        song_id = song_id.replace('_', ' ')
+        if any(char in song_id for char in "!@#$%^&*()'+,-./:;<=>?[]`{|}~ "):
+            song_id = requests.utils.quote(requests.utils.quote(song_id, safe=''), safe='')
+        
+        song, status_code = scrape_khinsider_get_song(album_id, song_id)
+        return song, status_code
 
 data_blueprint = Blueprint('data', __name__)
 data = Api(data_blueprint)
-data.add_resource(get_khinsider_home, '/khinsider/')
-data.add_resource(get_khinsider_album, '/khinsider/album/<string:album_id>')
+data.add_resource(get_khinsider_home, '/khinsider', '/khinsider/')
+data.add_resource(get_khinsider_album, '/khinsider/album/<string:album_id>', '/khinsider/album/<string:album_id>/')
+data.add_resource(get_khinsider_song, '/khinsider/album/<string:album_id>/<string:song_id>', '/khinsider/album/<string:album_id>/<string:song_id>/')
