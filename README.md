@@ -12,7 +12,7 @@ This project is a Flask-based API that scrapes video game soundtrack information
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/khinsider-scraper-api.git
+   git clone https://github.com/orenjerry/khinsider-scraper-api.git
    cd khinsider-scraper-api
    ```
 
@@ -43,15 +43,21 @@ This project is a Flask-based API that scrapes video game soundtrack information
 ## API Endpoints
 
 ### Get Latest Albums
+```bash
 GET /api/khinsider
+```
 Returns a list of the latest albums from KHInsider's home page.
 
 ### Get Album Details
+```bash
 GET /api/khinsider/album/<album_id>
+```
 Returns detailed information about a specific album.
 
 ### Get Song Download URL
+```bash
 GET /api/khinsider/album/<album_id>/<song_id>
+```
 Returns the download URL for a specific song.
 
 ## Error Handling
